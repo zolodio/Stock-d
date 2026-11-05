@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Stock’d · restocked</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=Figtree:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#e8edf3;--card:#fff;--ink:#0f1b2d;--mute:#5d6b80;--tag:#ffe14a;--tagink:#0f1b2d;--blue:#2f4bff;--line:#cdd6e2;color-scheme:light}
+@media(prefers-color-scheme:dark){:root{--bg:#0d1420;--card:#16202f;--ink:#eaf0f8;--mute:#92a1b5;--blue:#7b8cff;--line:#2a3649;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 Figtree,system-ui,sans-serif;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px clamp(16px,4vw,40px);border-bottom:2px solid var(--ink)}
+.logo{font:800 28px/1 "Bricolage Grotesque",sans-serif;letter-spacing:-.03em;color:var(--ink);text-decoration:none}
+.logo small{font:600 14px Figtree;color:var(--mute);letter-spacing:0;margin-left:8px}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.btn{background:var(--ink);color:var(--bg);border:0;border-radius:999px;padding:10px 18px;font-weight:600;text-decoration:none;display:inline-block}
+.btn.alt{background:transparent;color:var(--ink);border:2px solid var(--ink)}
+main{padding:clamp(16px,4vw,40px);max-width:1200px;margin:auto}
+h1{font:800 clamp(40px,8vw,84px)/.95 "Bricolage Grotesque",sans-serif;letter-spacing:-.04em;margin:8px 0 12px}
+.sub{color:var(--mute);max-width:52ch;margin:0 0 24px}
+.bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+.bar input,.bar select{background:var(--card);border:2px solid var(--line);border-radius:10px;padding:10px 12px}
+.bar input{flex:1;min-width:180px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:18px}
+.item{background:var(--card);border:2px solid var(--line);border-radius:6px;display:flex;flex-direction:column;overflow:hidden}
+.item .ph{aspect-ratio:1;background:#fff;display:grid;place-items:center;padding:12px}
+.item img{max-width:100%;max-height:100%;object-fit:contain}
+.item .in{padding:12px 14px 14px;display:flex;flex-direction:column;gap:6px;flex:1}
+.set{color:var(--mute);font-size:13px}
+.nm{font-weight:600;line-height:1.25}
+.row{display:flex;align-items:center;justify-content:space-between;margin-top:auto;gap:8px}
+.price{background:var(--tag);color:var(--tagink);font:800 20px "Bricolage Grotesque";padding:2px 10px;border-radius:3px;font-variant-numeric:tabular-nums}
+.stock{font-size:13px;color:var(--mute)}
+.add{background:var(--blue);color:#fff;border:0;border-radius:8px;padding:9px;font-weight:600;margin-top:8px}
+.add:disabled{opacity:.45;cursor:default}
+.panel{background:var(--card);border:2px solid var(--line);border-radius:8px;padding:20px;max-width:720px}
+.line{display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.line span:first-child{flex:1}
+.q button{width:30px;height:30px;border-radius:50%;border:2px solid var(--line);background:none}
+.total{display:flex;justify-content:space-between;font:800 24px "Bricolage Grotesque";padding:16px 0}
+.note{color:var(--mute);font-size:14px}
+.ct{font-size:20px;line-height:1.7;margin:12px 0 20px}
+.empty{color:var(--mute);padding:40px 0}
+@media(prefers-reduced-motion:no-preference){.add:active{transform:scale(.97)}}
+</style></head><body>
+<header><a class="logo" href="#shop">Stock’d<small>restocked</small></a><a class="btn alt" href="#cart" id="cartBtn">Cart (0)</a></header>
+<main id="app"></main>
+<script>
+// ---- CONFIG: edit these ----
+const CONFIG={
+  CONTACT:{name:"Your Name",phone:"(555) 555-0100",email:"you@example.com",area:"Your town, State"}
+};
+// Snapshot of the Collectr collection (shown until products.json loads): [id, name, set, price, qty]
+const SNAP=[["704186","30th Celebration Mini Tin Display","30th Celebration",233.40,1],["654136","Phantasmal Flames Elite Trainer Box","Phantasmal Flames",145.93,1],["668496","Ascended Heroes Elite Trainer Box","Ascended Heroes",123.13,1],["593355","Prismatic Evolutions Elite Trainer Box","Prismatic Evolutions",120.19,1],["704143","30th Celebration Elite Trainer Box","30th Celebration",113.88,3],["543845","Twilight Masquerade Elite Trainer Box","Twilight Masquerade",105.63,1],["672401","Perfect Order Elite Trainer Box","Perfect Order",70.31,1],["704171","30th Celebration Booster Bundle","30th Celebration",69.43,2],["504257","Deluxe Battle Deck: Quaquaval ex/Meowscarada ex [Set of 2]","Miscellaneous",66.34,1],["648588","Triple Whammy Tins [Set of 3]","Miscellaneous",64.87,1],["704145","30th Celebration Tech Sticker Collection [Alolan Exeggutor]","30th Celebration",34.97,1],["692958","Pitch Black Sleeved Booster Pack Art Bundle [Set of 4]","Pitch Black",26.39,2],["684449","Chaos Rising Sleeved Booster Pack Art Bundle [Set of 4]","Chaos Rising",25.96,1],["531574","ex Battle Deck [Houndoom ex]","Miscellaneous",23.68,1],["696638","2025 World Championship Deck: Yuya Okita (JP Raging Bolt)","World Championship Decks",22.57,1],["692951","Pitch Black Premium Checklane Blister [Gengar Line]","Pitch Black",22.25,1],["684458","Chaos Rising 3 Pack Blister [Charmeleon]","Chaos Rising",21.24,1],["714504","2-Pack Blister [Zarude] (1-Tab)","Miscellaneous",18.89,2],["671274","2-Pack Blister [Raikou] (1-tab)","Miscellaneous",17.90,3],["685575","Lumiose City Mini Tin [Salamence & Litleo]","Miscellaneous",14.45,1],["685579","Lumiose City Mini Tin [Gallade & Goomy]","Miscellaneous",14.44,1],["630434","Black Bolt Booster Pack","Black Bolt",13.89,10],["685577","Lumiose City Mini Tin [Emboar & Inkay]","Miscellaneous",13.45,1],["245143","Vivid Voltage Sleeved Booster Pack","Vivid Voltage",13.07,1],["257320","Darkness Ablaze Sleeved Booster Pack","Darkness Ablaze",11.34,1],["672434","Ascended Heroes Booster Pack","Ascended Heroes",10.02,1],["636737","White Flare Booster Pack","White Flare",9.83,2],["636736","Black Bolt Booster Pack","Black Bolt",9.75,1],["644352","Mega Evolution Booster Pack","Mega Evolution",9.49,1],["624683","Destined Rivals Booster Pack","Destined Rivals",8.80,2]]
+.map(([id,name,set_name,price,qty])=>({id,name,set_name,price,qty,image_url:`https://public.getcollectr.com/public-assets/products/product_${id}.png?optimizer=image&format=webp&width=400&quality=80&strip=metadata`}));
+
+const $=s=>document.querySelector(s), money=n=>"$"+n.toFixed(2);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let items=SNAP, cart={}, q="", sort="price-desc";
+try{cart=JSON.parse(localStorage.getItem("stockd-cart")||"{}")}catch(e){}
+const save=()=>{try{localStorage.setItem("stockd-cart",JSON.stringify(cart))}catch(e){}};
+const byId=id=>items.find(i=>i.id===id);
+const lines=()=>Object.entries(cart).map(([id,n])=>[byId(id),n]).filter(([p])=>p);
+const total=()=>lines().reduce((s,[p,n])=>s+p.price*n,0);
+
+let updated="";
+async function load(){ // products.json is refreshed hourly by the GitHub Action
+  try{
+    const r=await fetch("products.json",{cache:"no-store"}); if(!r.ok)return;
+    const d=await r.json(); if(!Array.isArray(d.products)||!d.products.length)return;
+    items=d.products; updated=d.updated||"";
+    for(const id in cart)if(!byId(id))delete cart[id];
+    render();
+  }catch(e){}
+}
+
+function shop(){
+  let list=items.filter(i=>(i.name+" "+i.set_name).toLowerCase().includes(q.toLowerCase()));
+  const s={"price-desc":(a,b)=>b.price-a.price,"price-asc":(a,b)=>a.price-b.price,"name":(a,b)=>a.name.localeCompare(b.name)}[sort];
+  list=list.sort(s);
+  return `<h1>Sealed only.<br>Restocked.</h1><p class="sub">Factory-sealed Pokémon product, listed from my live collection. Local pickup — add what you want, then check out to get in touch.${updated?` Prices updated ${esc(updated)}.`:""}</p>
+  <div class="bar"><input id="q" type="search" placeholder="Search sets or products" value="${esc(q)}" aria-label="Search">
+  <select id="sort" aria-label="Sort"><option value="price-desc">Price: high to low</option><option value="price-asc">Price: low to high</option><option value="name">Name</option></select></div>
+  ${list.length?`<div class="grid">${list.map(p=>{const n=cart[p.id]||0;return `<article class="item"><div class="ph"><img src="${esc(p.image_url)}" alt="" loading="lazy"></div><div class="in"><span class="set">${esc(p.set_name)}</span><span class="nm">${esc(p.name)}</span><div class="row"><span class="price">${money(p.price)}</span><span class="stock">${p.qty} in stock</span></div><button class="add" data-add="${esc(p.id)}" ${n>=p.qty?"disabled":""}>${n>=p.qty?"All in cart":"Add to cart"+(n?` (${n})`:"")}</button></div></article>`}).join("")}</div>`:`<p class="empty">Nothing matches “${esc(q)}”. Try a set name like Black Bolt.</p>`}`;
+}
+function cartView(){
+  const L=lines(); if(!L.length)return `<h1>Cart</h1><p class="empty">Your cart is empty.</p><a class="btn" href="#shop">Browse sealed product</a>`;
+  return `<h1>Cart</h1><div class="panel">${L.map(([p,n])=>`<div class="line"><span>${esc(p.name)}</span><span class="q"><button data-dec="${esc(p.id)}" aria-label="Remove one">−</button> ${n} <button data-inc="${esc(p.id)}" aria-label="Add one" ${n>=p.qty?"disabled":""}>+</button></span><strong>${money(p.price*n)}</strong></div>`).join("")}
+  <div class="total"><span>Total</span><span>${money(total())}</span></div><a class="btn" href="#contact">Check out</a> <a class="btn alt" href="#shop">Keep shopping</a></div>`;
+}
+function contact(){
+  const c=CONFIG.CONTACT,L=lines();
+  const msg=`Hi ${c.name}, I'd like to buy from Stock'd:\n`+L.map(([p,n])=>`${n}x ${p.name} (${money(p.price*n)})`).join("\n")+`\nTotal: ${money(total())}\nWhen can we meet?`;
+  return `<h1>Almost there.</h1><div class="panel"><p>Payment and handoff happen in person. Send me your order and we’ll set a time — local pickup only.</p>
+  <div class="ct"><strong>${esc(c.name)}</strong><br>${esc(c.area)}<br><a href="tel:${esc(c.phone)}">${esc(c.phone)}</a><br><a href="mailto:${esc(c.email)}">${esc(c.email)}</a></div>
+  ${L.length?`<a class="btn" href="sms:${esc(c.phone)}?&body=${encodeURIComponent(msg)}">Text me this order</a> <a class="btn alt" href="mailto:${esc(c.email)}?subject=${encodeURIComponent("Stock'd order")}&body=${encodeURIComponent(msg)}">Email it</a>
+  <p class="note">Your order: ${L.map(([p,n])=>n+"× "+esc(p.name)).join(", ")} — ${money(total())}</p>`:`<a class="btn" href="#shop">Browse sealed product</a>`}</div>`;
+}
+function render(){
+  const v=location.hash.slice(1)||"shop";
+  $("#app").innerHTML=v==="cart"?cartView():v==="contact"?contact():shop();
+  const n=Object.values(cart).reduce((a,b)=>a+b,0); $("#cartBtn").textContent=`Cart (${n})`;
+  const s=$("#sort"); if(s){s.value=sort}
+}
+document.addEventListener("click",e=>{
+  const t=e.target.closest("[data-add],[data-inc],[data-dec]"); if(!t)return;
+  const id=t.dataset.add||t.dataset.inc||t.dataset.dec, p=byId(id); if(!p)return;
+  const d=t.dataset.dec!==undefined?-1:1; cart[id]=Math.min(p.qty,(cart[id]||0)+d);
+  if(cart[id]<=0)delete cart[id]; save(); render();
+});
+document.addEventListener("input",e=>{if(e.target.id==="q"){q=e.target.value;const pos=e.target.selectionStart;render();const i=$("#q");i.focus();i.setSelectionRange(pos,pos)}});
+document.addEventListener("change",e=>{if(e.target.id==="sort"){sort=e.target.value;render()}});
+addEventListener("hashchange",()=>{render();scrollTo(0,0)});
+render(); load(); setInterval(load,300000);
+</script></body></html>
